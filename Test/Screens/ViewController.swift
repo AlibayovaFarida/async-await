@@ -2,100 +2,62 @@
 //  ViewController.swift
 //  Test
 //
-//  Created by Apple on 08.04.25.
+//  Created by Apple on 11.04.25.
 //
 
 import UIKit
 
-
-// Second method
 class ViewController: UIViewController {
-
-    func result() async {
-        let servers = ["primary", "secondary", "development"]
-        let usersList = await withTaskGroup(of: UserInfo.self) { group in
-            for server in servers {
-                group.addTask {
-                    async let userId = fetchUserID(from: server)
-                    async let username = fetchUsername(from: server)
-                    async let userStatus = fetchUserStatus(from: server)
-                    
-                    return UserInfo(server: server, userID: await userId, username: await username, status: await userStatus)
-                }
-            }
-            
-            var results: [UserInfo] = []
-            
-            for await result in group {
-                results.append(result)
-            }
-            
-            return results
-        }
-        
-        print(usersList)
-    }
+    private let imageView: UIImageView = {
+        let iv = UIImageView(frame: .init(x: 50, y: 300, width: 200, height: 200))
+        iv.isUserInteractionEnabled = true
+        return iv
+    }()
+    var offset: CGPoint?
     override func viewDidLoad() {
         super.viewDidLoad()
-        Task {
-            await result()
-        }
+        view.backgroundColor = .white
+        let myView = UIView(frame: .init(x: 50, y: 50, width: 300, height: 200))
+        myView.clipsToBounds = true
+        myView.backgroundColor = .systemPink
+        myView.transform = CGAffineTransform(rotationAngle: .pi/4.0)
+        let myView2 = UIView(frame: .init(x: 50, y: 50, width: 300, height: 200))
+        myView2.backgroundColor = .systemMint
+        
+//        let imageView = UIImageView(frame: .init(x: 50, y: 300, width: 200, height: 200))
+        imageView.image = UIImage(systemName: "pencil")
+        imageView.backgroundColor = .systemRed
+        imageView.contentMode = .scaleAspectFit
+        view.addSubview(myView)
+        view.addSubview(imageView)
+        myView.addSubview(myView2)
+        print(myView.frame)
+        print(myView.bounds)
+        print(myView.center)
     }
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesBegan(touches, with: event)
+        let touch = touches.first!
+        if touch.view == imageView {
+            let location = touch.location(in: imageView)
+            offset = location
+            return
+        }
+        offset = nil
+    }
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesMoved(touches, with: event)
+        let touch = touches.first!
+        let location = touch.location(in: view)
+        
+        guard let offset = offset else {
+            return
+        }
+        if touch.view == imageView {
+            imageView.frame.origin.x = location.x - offset.x
+            imageView.frame.origin.y = location.y - offset.y
+        }
+        
+    }
+
 }
-
-// First method
-
-//class ViewController: UIViewController {
-//    func result() async {
-//        var usersList: [UserInfo] = []
-//        let userIDS = await withTaskGroup(of: Int.self) { group in
-//            for server in ["primary", "secondary", "development"] {
-//                group.addTask {
-//                    await fetchUserID(from: server)
-//                }
-//            }
-//            var results: [Int] = []
-//            for await result in group {
-//                results.append(result)
-//            }
-//            return results
-//        }
-//        let usernames = await withTaskGroup(of: String.self) { group in
-//            for server in ["primary", "secondary", "development"] {
-//                group.addTask {
-//                    await fetchUsername(from: server)
-//                }
-//            }
-//            var results: [String] = []
-//            for await result in group {
-//                results.append(result)
-//            }
-//            return results
-//        }
-//        let userStatuses = await withTaskGroup(of: String.self) { group in
-//            for server in ["primary", "secondary", "development"] {
-//                group.addTask {
-//                    await fetchUserStatus(from: server)
-//                }
-//            }
-//
-//            var results: [String] = []
-//            for await result in group {
-//                results.append(result)
-//            }
-//            return results
-//        }
-//        for (index, value) in ["primary", "secondary", "development"].enumerated(){
-//            usersList.append(.init(server: value, userID: userIDS[index], username: usernames[index], status: userStatuses[index]))
-//        }
-//
-//        print(usersList)
-//    }
-//    
-//    override func viewDidLoad() {
-//        super.viewDidLoad()
-//        Task {
-//            await result()
-//        }
-//    }
-//}
